@@ -5,6 +5,10 @@ inputs:
   api_key:
     description: 'API key for authentication'
     required: true
+  fail_on_error:
+    description: 'Whether to fail the build if the API request fails'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -95,7 +99,20 @@ runs:
             changed_files: $changed_files
           }')
 
-        curl -X POST "https://pm.codebranch.app/api/v1/pr-ingest" \
+        response=$(curl -s -w "\n%{http_code}" -X POST "https://pm.codebranch.app/api/v1/pr-ingest" \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer $API_KEY" \
-          -d "$json_payload"
+          -d "$json_payload")
+
+        http_code=$(echo "$response" | tail -n1)
+        body=$(echo "$response" | sed '$d')
+
+        echo "Response: $body"
+        echo "HTTP Status: $http_code"
+
+        if [[ "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
+          echo "::error::API request failed with status $http_code"
+          if [[ "${{ inputs.fail_on_error }}" == "true" ]]; then
+            exit 1
+          fi
+        fi
