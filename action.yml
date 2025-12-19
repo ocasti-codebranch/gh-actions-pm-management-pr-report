@@ -51,11 +51,18 @@ runs:
         PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ', ') }}
         PR_URL: ${{ github.event.pull_request.html_url }}
       run: |
+        # Trim whitespace from API key
+        API_KEY=$(echo "$API_KEY" | tr -d '[:space:]')
+
         # Validate API key is provided
         if [[ -z "$API_KEY" ]]; then
           echo "::error::API key is missing or empty. Please provide a valid api_key input."
           exit 1
         fi
+
+        # Debug: Show API key format (masked)
+        echo "API key length: ${#API_KEY}"
+        echo "API key prefix: ${API_KEY:0:5}***"
 
         # Read diff data from files
         DIFF_STATS=$(cat /tmp/diff_stats.txt)
