@@ -33,7 +33,8 @@ runs:
         DIFF_STATS=$(git diff --stat origin/$BASE_REF...HEAD)
 
         # Get raw diff content (limited to first 5000 characters)
-        DIFF_CONTENT=$(git diff origin/$BASE_REF...HEAD | head -c 5000)
+        # Using || true to handle SIGPIPE (exit 141) when diff output exceeds limit
+        DIFF_CONTENT=$(git diff origin/$BASE_REF...HEAD | head -c 5000) || true
 
         # Write to files to preserve content safely
         echo "$DIFF_STATS" > /tmp/diff_stats.txt
