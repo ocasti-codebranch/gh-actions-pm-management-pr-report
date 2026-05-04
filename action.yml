@@ -29,8 +29,9 @@ runs:
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
-        # Get diff stats
-        DIFF_STATS=$(git diff --stat origin/$BASE_REF...HEAD)
+        # Get diff stats (limited to 5000 chars to avoid ARG_MAX when passed to jq)
+        # Using || true to handle SIGPIPE (exit 141) when diff output exceeds limit
+        DIFF_STATS=$(git diff --stat origin/$BASE_REF...HEAD | head -c 5000) || true
 
         # Get raw diff content (limited to first 5000 characters)
         # Using || true to handle SIGPIPE (exit 141) when diff output exceeds limit
